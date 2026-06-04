@@ -1,0 +1,85 @@
+{
+  "manifest_version": 3,
+  "name": "Music Cross Search",
+  "version": "0.9.0",
+  "description": "再生中の曲を YouTube / YouTube Music / Spotify / Apple Music で横断検索。アーティスト情報は Wikipedia から取得。",
+  "permissions": ["storage", "contextMenus"],
+  "host_permissions": [
+    "*://*.youtube.com/*",
+    "*://open.spotify.com/*",
+    "*://music.apple.com/*",
+    "https://*.wikipedia.org/*"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Music Cross Search",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+M",
+        "mac": "Alt+Shift+M"
+      },
+      "description": "ポップアップを開く"
+    },
+    "open-spotify": {
+      "suggested_key": {
+        "default": "Alt+Shift+S",
+        "mac": "Alt+Shift+S"
+      },
+      "description": "Spotify で検索"
+    },
+    "open-youtube-music": {
+      "suggested_key": {
+        "default": "Alt+Shift+Y",
+        "mac": "Alt+Shift+Y"
+      },
+      "description": "YouTube Music で検索"
+    },
+    "open-apple-music": {
+      "suggested_key": {
+        "default": "Alt+Shift+A",
+        "mac": "Alt+Shift+A"
+      },
+      "description": "Apple Music で検索"
+    },
+    "open-youtube": {
+      "description": "YouTube で検索 (ショートカット未割り当て)"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.youtube.com/*",
+        "*://open.spotify.com/*",
+        "*://music.apple.com/*"
+      ],
+      "js": ["page.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "*://*.youtube.com/*",
+        "*://open.spotify.com/*",
+        "*://music.apple.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "world": "ISOLATED"
+    }
+  ]
+}

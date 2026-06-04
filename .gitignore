@@ -1,0 +1,17 @@
+# Build artifacts
+dist/
+*.zip
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Node
+node_modules/
+
+# Logs
+*.log
