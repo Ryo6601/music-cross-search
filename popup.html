@@ -61,34 +61,6 @@
         background: #e0e7ff;
       }
 
-      /* ---- アーティスト切替チップ ---- */
-      .artist-chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        margin-bottom: 10px;
-      }
-      .artist-chip {
-        padding: 4px 10px;
-        border-radius: 12px;
-        background: #f4f4f5;
-        font-size: 11px;
-        cursor: pointer;
-        border: 1px solid transparent;
-        color: #444;
-        font-family: inherit;
-      }
-      .artist-chip:hover {
-        background: #e8e8eb;
-      }
-      .artist-chip.active {
-        background: #eef2ff;
-        color: #2b3a8a;
-        border-color: #c7d2fe;
-        font-weight: 600;
-        cursor: default;
-      }
-
       /* ---- アーティスト情報パネル ---- */
       .artist-panel {
         margin-top: 12px;
@@ -174,7 +146,6 @@
     </div>
     <div id="links" class="links"></div>
     <div id="artistPanel" class="artist-panel">
-      <div id="artistChips" class="artist-chips" style="display: none"></div>
       <div id="artistBody"></div>
     </div>
     <script src="popup.js"></script>

@@ -22,37 +22,12 @@ function pickText(selectors) {
   return null;
 }
 
-// アーティスト文字列を保守的に分割。"Simon & Garfunkel" や "AC/DC" は壊さないよう
-// `&` や `/` は分割しない。`feat.` 系・カンマ・全角読点だけ拾う。
-function splitArtistString(str) {
-  if (!str) return [];
-  return str
-    .split(/\s+(?:feat\.?|ft\.?|featuring|with)\s+/i)
-    .flatMap((p) => p.split(/\s*[,、]\s*/))
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
-
-// Spotify Web Player は複数アーティストを個別の <a> として持っているので
-// それを直接読めれば一番正確
-function getArtistsFromLinks(containerSelector) {
-  const container = document.querySelector(containerSelector);
-  if (!container) return null;
-  const links = container.querySelectorAll("a");
-  if (links.length === 0) return null;
-  const names = Array.from(links)
-    .map((a) => a.textContent?.trim())
-    .filter(Boolean);
-  return names.length > 0 ? names : null;
-}
-
 function extractFromDom() {
   const host = location.hostname;
   if (host.includes("music.youtube.com")) {
     const title = pickText(["ytmusic-player-bar .title"]);
     const byline = pickText(["ytmusic-player-bar .byline"]);
-    const artistPart = byline?.split("•")[0]?.trim() || null;
-    return { title, artist: artistPart };
+    return { title, artist: byline?.split("•")[0]?.trim() || null };
   }
   if (host.includes("youtube.com")) {
     return {
@@ -61,16 +36,9 @@ function extractFromDom() {
     };
   }
   if (host.includes("open.spotify.com")) {
-    // 個別 <a> 要素から各アーティスト名を取得 (一番正確)
-    const artists =
-      getArtistsFromLinks('[data-testid="context-item-info-artist"]') || [];
-    const fallbackArtist = pickText([
-      '[data-testid="context-item-info-artist"]',
-    ]);
     return {
       title: pickText(['[data-testid="context-item-link"]']),
-      artist: artists.length > 0 ? artists.join(", ") : fallbackArtist,
-      artists,
+      artist: pickText(['[data-testid="context-item-info-artist"]']),
     };
   }
   if (host.includes("music.apple.com")) {
@@ -85,19 +53,12 @@ function extractFromDom() {
 let lastKey = "";
 function save(track) {
   if (!track.title) return;
-  // 既に track.artists があれば優先 (Spotify DOM 由来など)、無ければ
-  // artist 文字列から分割して導出
-  const artists =
-    Array.isArray(track.artists) && track.artists.length > 0
-      ? track.artists
-      : splitArtistString(track.artist);
   const key = `${track.title}|${track.artist || ""}`;
   if (key === lastKey) return;
   lastKey = key;
   chrome.storage.local.set({
     currentTrack: {
       ...track,
-      artists,
       source: sourceFromHost(),
       url: location.href,
       updatedAt: Date.now(),
