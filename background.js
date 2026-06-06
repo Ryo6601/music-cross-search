@@ -66,17 +66,57 @@ async function fetchWikipediaSearchSummary(lang, name) {
   };
 }
 
+// 「これは音楽家の記事である」と思える単語が抜粋に含まれているか
+const MUSIC_KW_JA =
+  /歌手|ミュージシャン|バンド|シンガー|アイドル|ラッパー|音楽グループ|声優|作曲家|アーティスト|ロックグループ|楽団|演奏家|ピアニスト|ギタリスト|ドラマー/;
+const MUSIC_KW_EN =
+  /\b(musician|singer|band|artist|rapper|composer|songwriter|vocalist|guitarist|drummer|pianist|DJ|music\s+group|recording\s+artist|hip[\s-]?hop|rock\s+group)\b/i;
+
+function isMusicRelated(text, lang) {
+  if (!text) return false;
+  return lang === "ja" ? MUSIC_KW_JA.test(text) : MUSIC_KW_EN.test(text);
+}
+
+const MUSIC_HINT = {
+  ja: "(歌手 OR ミュージシャン OR バンド)",
+  en: "(musician OR singer OR band)",
+};
+
 async function getWikipediaArtist(name) {
-  // 日本語版を優先。ヒットしなければ英語版にフォールバック。
+  let bestFallback = null;
+
+  // パス1: 音楽コンテキスト付きで検索 (ja → en)
+  for (const lang of ["ja", "en"]) {
+    try {
+      const result = await fetchWikipediaSearchSummary(
+        lang,
+        `${name} ${MUSIC_HINT[lang]}`,
+      );
+      if (result?.extract && isMusicRelated(result.extract, lang)) {
+        return result;
+      }
+      // 音楽関連でなくても候補として保持
+      if (!bestFallback && result?.extract) bestFallback = result;
+    } catch (e) {
+      console.warn(`[MCS] Wikipedia hinted ${lang} failed:`, e);
+    }
+  }
+
+  // パス2: プレーン検索のフォールバック (ja → en)
   for (const lang of ["ja", "en"]) {
     try {
       const result = await fetchWikipediaSearchSummary(lang, name);
-      if (result?.extract) return result;
+      if (result?.extract && isMusicRelated(result.extract, lang)) {
+        return result;
+      }
+      if (!bestFallback && result?.extract) bestFallback = result;
     } catch (e) {
-      console.warn(`[MCS] Wikipedia ${lang} failed:`, e);
+      console.warn(`[MCS] Wikipedia plain ${lang} failed:`, e);
     }
   }
-  return null;
+
+  // どれも music-related と判定できなかったが、何かしらヒットしていれば返す
+  return bestFallback;
 }
 
 async function getArtistInfo({ artistHint }) {
