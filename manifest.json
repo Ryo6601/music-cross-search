@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Music Cross Search",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "再生中の曲を YouTube / YouTube Music / Spotify / Apple Music で横断検索。アーティスト情報は Wikipedia から取得。",
   "permissions": ["storage", "contextMenus"],
   "host_permissions": [
