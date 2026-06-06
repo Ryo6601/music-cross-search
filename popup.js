@@ -90,10 +90,8 @@ function renderArtistInfo(info, body) {
   });
 }
 
-async function loadArtistInfo({ artistHint }) {
-  const panel = document.getElementById("artistPanel");
+async function loadArtistInfoBody(artistHint) {
   const body = document.getElementById("artistBody");
-  panel.classList.add("open");
   body.innerHTML = '<div class="panel-status">読み込み中…</div>';
 
   try {
@@ -109,6 +107,45 @@ async function loadArtistInfo({ artistHint }) {
   } catch (e) {
     body.innerHTML = `<div class="panel-status err">エラー: ${escapeHtml(e.message || String(e))}</div>`;
   }
+}
+
+function openArtistPanel(artists) {
+  const panel = document.getElementById("artistPanel");
+  const chipsEl = document.getElementById("artistChips");
+  panel.classList.add("open");
+
+  if (artists.length > 1) {
+    chipsEl.style.display = "";
+    chipsEl.innerHTML = artists
+      .map(
+        (name, i) =>
+          `<button class="artist-chip${i === 0 ? " active" : ""}" data-artist="${escapeHtml(name)}">${escapeHtml(name)}</button>`,
+      )
+      .join("");
+    chipsEl.querySelectorAll(".artist-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        if (chip.classList.contains("active")) return;
+        chipsEl
+          .querySelectorAll(".artist-chip")
+          .forEach((c) => c.classList.remove("active"));
+        chip.classList.add("active");
+        loadArtistInfoBody(chip.dataset.artist);
+      });
+    });
+  } else {
+    chipsEl.style.display = "none";
+    chipsEl.innerHTML = "";
+  }
+
+  loadArtistInfoBody(artists[0]);
+}
+
+function closeArtistPanel() {
+  const panel = document.getElementById("artistPanel");
+  const chipsEl = document.getElementById("artistChips");
+  panel.classList.remove("open");
+  chipsEl.style.display = "none";
+  chipsEl.innerHTML = "";
 }
 
 // ---------- メイン描画 ----------
@@ -139,18 +176,26 @@ async function render() {
     linksEl.appendChild(btn);
   }
 
-  if (artist) {
+  // 表示用のアーティスト一覧: artists 配列を優先、なければ artist 文字列を 1要素配列に
+  const artistsList =
+    Array.isArray(currentTrack.artists) && currentTrack.artists.length > 0
+      ? currentTrack.artists
+      : artist
+        ? [artist]
+        : [];
+
+  if (artistsList.length > 0) {
     const toggleBtn = createLinkButton({
       label: "👤 アーティスト情報を表示",
       className: "btn toggle",
       onClick: (btn) => {
         const panel = document.getElementById("artistPanel");
         if (panel.classList.contains("open")) {
-          panel.classList.remove("open");
+          closeArtistPanel();
           btn.textContent = "👤 アーティスト情報を表示";
         } else {
           btn.textContent = "👤 アーティスト情報を非表示";
-          loadArtistInfo({ artistHint: artist });
+          openArtistPanel(artistsList);
         }
       },
     });
